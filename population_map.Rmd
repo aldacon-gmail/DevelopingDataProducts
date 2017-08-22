@@ -1,0 +1,47 @@
+---
+title: "Catalunya Population"
+author: "David Conejero"
+date: "22 de agosto de 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(warnings = FALSE)
+```
+
+## Synopsis
+
+This document shows in an interactive map the distribution of population in Catalonia. The size of the circles is related to the Population and the colour is related to the density.
+
+```{r date, comment=""}
+d<-format(Sys.Date(), format="%B %d %Y")
+print(d)
+```
+
+```{r map, message=FALSE}
+options(warn=-1)
+library(leaflet)
+
+data<-read.csv2("https://raw.githubusercontent.com/aldacon-gmail/DevelopingDataProducts/master/population.csv")
+data$Poblacio<-as.numeric(gsub("\\.", "", data$Poblacio))
+data$Densitat<-as.numeric(gsub(",","\\.", gsub("\\.", "", data$Dens)))
+
+
+data$Longitud<-as.numeric(gsub(",","\\.", data$Long))
+data$Latitud<-as.numeric(gsub(",","\\.",  data$Lat))
+
+heatcols <- heat.colors(6)
+
+pal <- colorNumeric(
+        palette = sort(heatcols, decreasing = TRUE),
+        domain = data$Densitat)
+
+data %>% leaflet() %>%
+    addTiles() %>% 
+         addCircles(weight=1, radius=sqrt(data$Poblacio) * 30, lat=data$Latitud,
+                    lng=data$Longitud, color = ~pal(data$Densitat)) %>%
+        addLegend("bottomleft", pal=pal, values = ~data$Densitat, 
+                  title = "Density<br>hab/Km2", opacity=1)
+```
+
