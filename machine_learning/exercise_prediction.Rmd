@@ -1,0 +1,183 @@
+---
+title: "Prediction on how a weight lifting exercise is done"
+author: "David Conejero"
+date: "23 de agosto de 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(warnings = FALSE)
+```
+
+
+## Overview
+
+In this document we are going to define a model to predict how a weight 
+lifting exercise is being done. In order to do that we are going to use the database created by the [Human Activity Recognition at Groupware@LES](http://web.archive.org/web/20161224072740/http:/groupware.les.inf.puc-rio.br/har).
+
+From the data, the most relevant features have been selected, then the data has been splitted between train and test, and different models have been created and tested. After the evaluation of the different models it has been detected that the RandomForest was the one which would predict better the kind of performance the user has done with more than 99% of Accuracy.
+
+## Preparation
+
+Libraries being used:
+
+```{r libraries, message=FALSE}
+library(caret)
+library(rattle)
+library(parallel)
+library(doParallel)
+```
+
+Downloading data
+
+```{r download, cache=TRUE}
+training<-read.csv("https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv", 
+                   na.strings = c("NA","","#DIV/0!"))
+testing<-read.csv("https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv",
+          na.strings = c("NA","","#DIV/0!"))
+```
+
+## Feature selection
+
+After a visual inspection on the data, the first features were removed, because they did not provide relevant information to the prediction. Features with almost values were also discarded.
+Finally, it was checked if any other value of the feature list was not providing any value.
+
+```{r cleaning}
+# Remove unnecessary features
+t<-training[,-1:-7]
+# Remove features with no values
+t<-t[, colSums(is.na(t)) < 1900]
+# Check if there are other features that should be removed
+nearZero<-nearZeroVar(t, saveMetrics = TRUE)
+
+```
+
+After visual inspection of nearZero vector, it was checked that no more features should be removed.
+And we finally get 53 features and the predicted value.
+
+Highly correlated features will also be removed.
+
+```{r correlated}
+# Choosing features
+c<-cor(t[,-length(t)])
+
+# Cutoff has been set to 0.8, since there are too many features and it may be difficult to compute models
+correlated<-findCorrelation(c, cutoff=0.8)
+t<-t[, -correlated]
+
+```
+
+With this final selection, only 40 features remain.
+
+## Database split
+
+In order to ensure the independece of the study, training dataset is splitted for training the data model (train_data) and testing it (test_data). Testing test will be kept untouched.
+
+```{r split}
+set.seed(1234)
+inTrain<-createDataPartition(training$classe, p = 0.70, list = FALSE)
+train_data<-t[inTrain,]
+test_data<-t[-inTrain,]
+```
+
+## Fitting models
+
+Several models will be created to test which one predicts best how the exercise is being done:
+
+In order to accelerate the training process:
+
+```{r parallel}
+cluster <- makeCluster(detectCores() - 1) # convention to leave 1 core for OS
+registerDoParallel(cluster)
+```
+
+### Tree
+
+A Tree model is fitted to the training data
+```{r tree, cache=TRUE, message=FALSE}
+tree<-train(classe ~., data=train_data, method="rpart")
+
+tree_predict<-predict(tree,test_data)
+tree_cm<-confusionMatrix(tree_predict,test_data$classe)
+```
+
+We can see what would be the decission Tree in this scenario:
+
+```{r plot_tree}
+fancyRpartPlot(tree$finalModel, sub = "")
+```
+
+
+## GBM
+
+```{r gbm, cache=TRUE, message=FALSE}
+fitControl <- trainControl(method = "cv",
+                           number = 10,
+                           allowParallel = TRUE)
+gbm<-train(classe ~., data=train_data, method="gbm", 
+           trControl = fitControl)
+gbm_predict<-predict(gbm,test_data)
+gbm_cm<-confusionMatrix(gbm_predict,test_data$classe)
+```
+
+
+## RandomForest
+
+```{r RandomForest, cache=TRUE, message=FALSE}
+
+rf<-train(classe ~., data=train_data, preprocess=c("center","scale"), 
+          method="rf",trControl = fitControl)
+
+rf_predict<-predict(rf,test_data)
+rf_cm<-confusionMatrix(rf_predict,test_data$classe)
+
+```
+
+## lda
+
+```{r lda, cache=TRUE, message=FALSE}
+lda<-train(classe ~., data=train_data, preprocess=c("center","scale"),
+           method="lda",trControl = fitControl)
+lda_predict<-predict(lda,test_data)
+lda_cm<-confusionMatrix(lda_predict,test_data$classe)
+```
+
+# SVM
+
+```{r svm, cache=TRUE, message=FALSE}
+ctrl <- trainControl(method = "repeatedcv", repeats = 10)
+svm <- train(classe~., data=train_data, preprocess=c("center","scale"), 
+             method = "svmLinear", trControl = ctrl)
+
+svm_predict<-predict(svm,test_data)
+svm_cm<-confusionMatrix(svm_predict,test_data$classe)
+```
+
+## Confusion Matrix
+
+Checking the confusion matrix for the different algorithms used:
+
+```{r plot}
+par(mfrow=c(2,2))
+plot(tree_cm$table, main="TREE")
+plot(gbm_cm$table, main="GBM")
+plot(svm_cm$table, main="SVM")
+plot(lda_cm$table, main="LDA")
+
+```
+
+```{r plot_rf}
+par(mfrow=c(1,1))
+plot(rf_cm$table, main="RandomForest")
+
+```
+
+As it can bee seen the correlation is almost perfect for RandomForest, and that's the model used on the exercise.
+
+```{r rf_cm}
+rf_cm$table
+
+rf_cm$overall
+
+```
