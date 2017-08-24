@@ -27,6 +27,8 @@ library(caret)
 library(rattle)
 library(parallel)
 library(doParallel)
+library(gridExtra)
+library(dplyr)
 ```
 
 Downloading data
@@ -134,7 +136,7 @@ rf_cm<-confusionMatrix(rf_predict,test_data$classe)
 
 ```
 
-## lda
+## LDA
 
 ```{r lda, cache=TRUE, message=FALSE}
 lda<-train(classe ~., data=train_data, preprocess=c("center","scale"),
@@ -158,26 +160,82 @@ svm_cm<-confusionMatrix(svm_predict,test_data$classe)
 
 Checking the confusion matrix for the different algorithms used:
 
-```{r plot}
-par(mfrow=c(2,2))
-plot(tree_cm$table, main="TREE")
-plot(gbm_cm$table, main="GBM")
-plot(svm_cm$table, main="SVM")
-plot(lda_cm$table, main="LDA")
+```{r plot, echo=FALSE}
+rf_cm_table <- as.data.frame(rf_cm$table) %>% 
+        mutate(Reference=factor(Reference), Reference=factor(Reference, rev(levels(Reference))))
+rf_plot <- ggplot(data =  rf_cm_table, mapping = aes(x = Prediction, y = Reference)) +
+        geom_tile(aes(fill = Freq), colour = "gray") +
+        geom_text(aes(label = sprintf("%d", Freq)), vjust = 1) +
+        scale_fill_gradient(low = "white", high = "red") +
+        xlab("Predicted Class") + ylab("Actual Class") + 
+        ggtitle("Confusion Matrix for the RF Model") +
+        theme_bw() + theme(legend.position = "right", plot.title = element_text(hjust = 0.5))
+
+rf_cm_table <- as.data.frame(rf_cm$table) %>% 
+        mutate(Reference=factor(Reference), Reference=factor(Reference, rev(levels(Reference))))
+rf_plot <- ggplot(data =  rf_cm_table, mapping = aes(x = Prediction, y = Reference)) +
+        geom_tile(aes(fill = Freq), colour = "gray") +
+        geom_text(aes(label = sprintf("%d", Freq)), vjust = 1) +
+        scale_fill_gradient(low = "white", high = "red") +
+        xlab("Predicted Class") + ylab("Actual Class") + 
+        ggtitle("Confusion Matrix for the RF Model") +
+        theme_bw() + theme(legend.position = "right", plot.title = element_text(hjust = 0.5))
+
+tree_cm_table <- as.data.frame(tree_cm$table) %>% 
+        mutate(Reference=factor(Reference), Reference=factor(Reference, rev(levels(Reference))))
+tree_plot <- ggplot(data =  tree_cm_table, mapping = aes(x = Prediction, y = Reference)) +
+        geom_tile(aes(fill = Freq), colour = "gray") +
+        geom_text(aes(label = sprintf("%d", Freq)), vjust = 1) +
+        scale_fill_gradient(low = "white", high = "red") +
+        xlab("Predicted Class") + ylab("Actual Class") + 
+        ggtitle("Confusion Matrix for the Tree Model") +
+        theme_bw() + theme(legend.position = "right", plot.title = element_text(hjust = 0.5))
+
+gbm_cm_table <- as.data.frame(gbm_cm$table) %>% 
+        mutate(Reference=factor(Reference), Reference=factor(Reference, rev(levels(Reference))))
+gbm_plot <- ggplot(data =  gbm_cm_table, mapping = aes(x = Prediction, y = Reference)) +
+        geom_tile(aes(fill = Freq), colour = "gray") +
+        geom_text(aes(label = sprintf("%d", Freq)), vjust = 1) +
+        scale_fill_gradient(low = "white", high = "red") +
+        xlab("Predicted Class") + ylab("Actual Class") + 
+        ggtitle("Confusion Matrix for the GBM Model") +
+        theme_bw() + theme(legend.position = "right", plot.title = element_text(hjust = 0.5))
+
+svm_cm_table <- as.data.frame(svm_cm$table) %>% 
+        mutate(Reference=factor(Reference), Reference=factor(Reference, rev(levels(Reference))))
+svm_plot <- ggplot(data =  svm_cm_table, mapping = aes(x = Prediction, y = Reference)) +
+        geom_tile(aes(fill = Freq), colour = "gray") +
+        geom_text(aes(label = sprintf("%d", Freq)), vjust = 1) +
+        scale_fill_gradient(low = "white", high = "red") +
+        xlab("Predicted Class") + ylab("Actual Class") + 
+        ggtitle("Confusion Matrix for the SVM Model") +
+        theme_bw() + theme(legend.position = "right", plot.title = element_text(hjust = 0.5))
+
+lda_cm_table <- as.data.frame(lda_cm$table) %>% 
+        mutate(Reference=factor(Reference), Reference=factor(Reference, rev(levels(Reference))))
+lda_plot <- ggplot(data =  lda_cm_table, mapping = aes(x = Prediction, y = Reference)) +
+        geom_tile(aes(fill = Freq), colour = "gray") +
+        geom_text(aes(label = sprintf("%d", Freq)), vjust = 1) +
+        scale_fill_gradient(low = "white", high = "red") +
+        xlab("Predicted Class") + ylab("Actual Class") + 
+        ggtitle("Confusion Matrix for the LDA Model") +
+        theme_bw() + theme(legend.position = "right", plot.title = element_text(hjust = 0.5))
+
+grid.arrange(tree_plot, gbm_plot, lda_plot, svm_plot, ncol=2)
 
 ```
 
-```{r plot_rf}
-par(mfrow=c(1,1))
-plot(rf_cm$table, main="RandomForest")
-
+```{r plot_rf, echo=FALSE}
+rf_plot
 ```
 
 As it can bee seen the correlation is almost perfect for RandomForest, and that's the model used on the exercise.
 
 ```{r rf_cm}
-rf_cm$table
 
 rf_cm$overall
 
 ```
+
+Since the test is incorrelated to the trainning set, and only it has been used to the selection of the model, but it has not been used to improve the model, 99% accuracy could be defined as the out of sample error.
+
