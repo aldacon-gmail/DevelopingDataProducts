@@ -1,0 +1,54 @@
+MPG, Weight, HP and Transmission relation
+========================================================
+author: David Conejero
+date: 26 de agosto de 2017
+autosize: true
+
+Synopsis
+========================================================
+
+```{r date, comment="", echo=FALSE}
+d<-format(Sys.Date(), format="%B %d %Y")
+print(d)
+```
+
+This document shows in an interactive map relationship of Mile per Galon (MPG), weight, horsepower and type o transmission from the **mtcars** database.
+
+```{r plot_prep, message=FALSE}
+options(warn=-1)
+library(webshot)
+library(plotly)
+library(datasets)
+
+mtcars$am<-as.factor(mtcars$am)
+levels(mtcars$am)<-c("automatic","manual")
+
+p<-plot_ly(x= ~mtcars$mpg, y= ~mtcars$wt, z=~mtcars$hp, color = ~mtcars$am,
+        text=rownames(mtcars), type="scatter3d", mode = "markers") %>% 
+        layout(title = "Relationship between MPG, Weight, HP and Transmission type", 
+               scene = list(xaxis = list(title = "MPG"),
+                            yaxis = list(title = "Weight (100 lbs)"),
+                            zaxis = list(title = "HorsePower")))
+```
+
+
+Slide With Plot
+========================================================
+
+```{r plot, echo = FALSE}
+options(warn=-1)
+library(webshot)
+library(plotly)
+library(datasets)
+
+mtcars$am<-as.factor(mtcars$am)
+levels(mtcars$am)<-c("automatic","manual")
+
+p<-plot_ly(x= ~mtcars$mpg, y= ~mtcars$wt, z=~mtcars$hp, color = ~mtcars$am,
+        text=rownames(mtcars), type="scatter3d", mode = "markers") %>% 
+        layout(title = "Relationship between MPG, Weight, HP 
+                        and Transmission type", 
+               scene = list(xaxis = list(title = "MPG"),
+                            yaxis = list(title = "Weight (100 lbs)"),
+                            zaxis = list(title = "HorsePower")))
+```
