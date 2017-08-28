@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+  <script type="application/shiny-singletons"></script>
+  <script type="application/html-dependencies">json2[2014.02.04];jquery[1.12.4];shiny[1.0.5];bootstrap[3.3.7]</script>
+<script src="shared/json2-min.js"></script>
+<script src="shared/jquery.min.js"></script>
+<link href="shared/shiny.css" rel="stylesheet" />
+<script src="shared/shiny.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="shared/bootstrap/css/bootstrap.min.css" rel="stylesheet" />
+<script src="shared/bootstrap/js/bootstrap.min.js"></script>
+<script src="shared/bootstrap/shim/html5shiv.min.js"></script>
+<script src="shared/bootstrap/shim/respond.min.js"></script>  <title>HELP for Diamonds App</title>
+
+</head>
+
+<body>
+  <div class="container-fluid">
+    <h2>HELP for Diamonds App</h2>
+    <div class="col-sm-8">
+      <h3>Overview</h3>
+      <p>This application allows you to check if the value of a diamods is adjusted to the value in the market
+       You just need to set up the Quality of the cut, the caret and the price
+       And you will be able to see the adjusted prices for that quality
+       The mean price for caret of diamonds cutted with the same quality (in a red line)
+       And a Blue point with the indication of the price and carets of your diamond, that you have updated on the slidebars on the left
+       Finally, you will see if, according to the model, your diamond is too cheap, too expensive or it is adjusted to the regular market price.</p>
+      <h3>Input</h3>
+      <p>There are three inputs on the left side panel, the Cut Quality, and the slidebars to set the price and caret</p>
+      <h3>Output</h3>
+      <p>On the main panel it can be seen a plot showing the prices of different carets depending on the cut quality selected,
+           The mean price for caret of diamonds cutted with the same quality is displayed in a red line.
+           And a Blue point is the indication of the price vs carets of your diamond.
+           Under the plot it is labelled if the price is too cheap, too expensive or normal in the market
+           </p>
+    </div>
+  </div>
+</body>
+
+</html>

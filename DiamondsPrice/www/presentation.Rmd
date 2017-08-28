@@ -1,0 +1,126 @@
+---
+title: "Diamonds App"
+author: "David Conejero"
+date: "28 de agosto de 2017"
+output: ioslides_presentation
+runtime: shiny
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## Diamonds App
+
+Predict quick and easily if the price they are offering you adjusts to the market Price.
+
+
+This application allows you to check if the value of a diamods is adjusted to the value in the market. You just need to set up the Quality of the cut, the caret and the price, and you will be able to see the adjusted prices for that quality and if, according to the model, your diamond is too cheap, too expensive or it is adjusted to the regular market price.
+       
+## How does it work
+
+```{r code, eval=TRUE, message=FALSE, fig.height=800, fight.weight=640}
+
+library(shiny)
+library(plotly)
+library(mgcv)
+
+qa <- levels(diamonds$cut)
+
+ui<-shinyUI(fluidPage(
+  
+  # Application title
+  titlePanel("Diamonds"),
+  
+  sidebarLayout(
+    sidebarPanel(
+      selectInput(inputId = "cut",
+                  label = "Cut Quality:",
+                  choices = qa,
+                  selected = qa[3]),
+      sliderInput("carats", "Number of Carats:", 
+                   min = 0, max = 2.5, value= 1, step = 0.01),
+      sliderInput("price", "Price:", 
+                  min = 0, max = 20000, value= 5600, step = 10),
+      helpText(a("Help", href="help.html", target="_blank"))
+    ),
+
+    # Show a plot of the generated distribution
+    mainPanel(
+       plotlyOutput("distPlot"),
+       h3("Fair Price: ", textOutput("pred1"))
+       
+    )
+  )
+))
+
+server<-shinyServer(function(input, output) {
+
+  
+  output$distPlot <- renderPlotly({
+
+          set.seed(100)
+          d <- diamonds[diamonds$cut==input$cut, ]          
+          d <- d[sample(nrow(d), 1000), ]          
+
+#         Y<- predict(mod, data.frame(carat = input$carats))
+
+         p <- ggplot() +
+              geom_point(data = d, aes(x = carat, y = price, text = paste("Clarity:", clarity)), size = .5) +
+              geom_smooth(data = d, aes(text = "Predicted", x = carat, y = price, colour = cut, fill = cut), show.legend = FALSE) +
+              geom_point(aes(text="Evaluated:", x = input$carats, y = input$price, size=5, color="red", fill = "red")) + 
+              theme(legend.position = "none")
+
+         ggplotly(p)
+         
+  })
+  
+  
+  
+  predictedprice <- reactive({
+
+        set.seed(100)
+        d <- diamonds[diamonds$cut==input$cut, ]          
+        d <- d[sample(nrow(d), 1000), ]          
+        fit<-gam(data=d,formula=price ~s(carat, bs = "cs"))
+        n<-data.frame(carat=input$carats)
+        r<-predict.gam(fit,n, type="link", se.fit=TRUE)
+        upr <- r$fit + (2 * r$se.fit)
+        lwr <- r$fit - (2 * r$se.fit)
+        upr <- fit$family$linkinv(upr)
+        lwr <- fit$family$linkinv(lwr)
+
+        
+        if (input$price < lwr) {"BE CAREFUL: TOO CHEAP"}
+        else {
+                if (input$price > upr){"TOO EXPENSIVE"}
+                else{"NORMAL"}
+        }
+  
+  })
+  
+  output$pred1 <- renderText({
+        predictedprice()
+          })          
+})
+
+
+shinyApp(ui, server)
+```
+
+## Input
+
+There are three inputs on the left side panel to control:
+
+* The Cut Quality (selection) 
+* Carey (slidebar)
+* Price (sidebar)
+
+## Output
+
+* The mean price for caret of diamonds cutted with the same quality (in a red line)
+
+* Blue point with the indication of the price and carets of your diamond, that you have updated on the slidebars on the left
+
+* Finally, you will see if, according to the model, your diamond is too cheap, too expensive or it is adjusted to the regular market price.
+       

@@ -1,0 +1,11 @@
+name: presentation
+title: Presentation
+account: aldacon
+server: shinyapps.io
+appId: 207956
+bundleId: 957223
+url: https://aldacon.shinyapps.io/presentation/
+when: 1503922609.85135
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: help.html
