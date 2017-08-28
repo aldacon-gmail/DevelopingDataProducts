@@ -19,7 +19,7 @@ This application allows you to check if the value of a diamods is adjusted to th
        
 ## How does it work
 
-```{r code, eval=TRUE, fig.height=800, fight.weight=640}
+```{r code, eval=TRUE, message=FALSE, fig.height=800, fight.weight=640}
 
 library(shiny)
 library(plotly)
