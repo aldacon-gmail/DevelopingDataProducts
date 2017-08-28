@@ -1,0 +1,60 @@
+DiamondsAppPresentation
+========================================================
+author: David Conejero
+date: 28 de agosto de 2017
+autosize: true
+
+Diamonds App
+========================================================
+
+Predict quick and easily if the price they are offering you adjusts to the market Price.
+
+
+This application allows you to check if the value of a diamods is adjusted to the value in the market. You just need to set up the Quality of the cut, the caret and the price, and you will be able to see the adjusted prices for that quality and if, according to the model, your diamond is too cheap, too expensive or it is adjusted to the regular market price.
+       
+
+Input
+========================================================
+There are three inputs on the left side panel to control:
+
+* The Cut Quality (selection) 
+* Carey (slidebar)
+* Price (sidebar)
+
+Output
+========================================================
+* The mean price for caret of diamonds cutted with the same quality (in a red line)
+
+* Blue point with the indication of the price and carets of your diamond, that you have updated on the slidebars on the left
+
+* Finally, you will see if, according to the model, your diamond is too cheap, too expensive or it is adjusted to the regular market price.
+       
+Visualization
+========================================================
+
+```{r code, echo = FALSE, message=FALSE}
+
+library(shiny)
+library(ggplot2)
+library(mgcv)
+
+cut<-"Very Good"
+carats<-1
+price<-5600
+
+
+set.seed(100)
+d <- diamonds[diamonds$cut==cut, ]          
+d <- d[sample(nrow(d), 1000), ]          
+
+
+
+p <- ggplot() +
+     geom_point(data = d, aes(x = carat, y = price, text = paste("Clarity:", clarity)), size = .5) +
+     geom_smooth(data = d, aes(text = "Predicted", x = carat, y = price, colour = cut, fill = cut), show.legend = FALSE) +
+     geom_point(aes(text="Evaluated:", x = carats, y = price, size=5, color="red", fill = "red")) + 
+     theme(legend.position = "none")
+
+p
+         
+```
